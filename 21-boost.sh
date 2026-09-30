@@ -71,7 +71,6 @@ BOOST_PORTS=(
     boost-optional
     boost-scope
     boost-smart-ptr
-    boost-span
     boost-static-assert
     boost-type-index
     boost-type-traits
@@ -105,7 +104,6 @@ BOOST_PORTS=(
 
     boost-bimap
     boost-circular-buffer
-    boost-flat-map
     boost-graph
     boost-heap
     boost-intrusive
@@ -162,8 +160,7 @@ BOOST_PORTS=(
 # Funções
 # ============================================================
 
-fail()
-{
+fail() {
     printf 'Erro: %s\n' "$*" >&2
     exit 1
 }
@@ -172,7 +169,7 @@ fail()
 # Argumentos
 # ============================================================
 
-(( $# == 0 )) ||
+(($# == 0)) ||
     fail "Uso: $0 (sem argumentos)"
 
 # ============================================================
@@ -277,6 +274,33 @@ printf '%s\n' '----------------------------------------'
 printf '\n'
 
 # ============================================================
+# Validação dos ports
+# ============================================================
+
+printf 'Validando ports Boost...\n\n'
+
+INVALID_PORTS=()
+
+for port in "${BOOST_PORTS[@]}"; do
+    if [[ ! -d "$VCPKG_ROOT/ports/$port" ]]; then
+        INVALID_PORTS+=("$port")
+    fi
+done
+
+if ((${#INVALID_PORTS[@]} > 0)); then
+    printf 'Erro: os seguintes ports não existem no vcpkg:\n\n' >&2
+
+    for port in "${INVALID_PORTS[@]}"; do
+        printf '  - %s\n' "$port" >&2
+    done
+
+    printf '\n' >&2
+    exit 1
+fi
+
+printf 'Todos os %d ports existem.\n\n' "${#BOOST_PORTS[@]}"
+
+# ============================================================
 # Instalação
 # ============================================================
 
@@ -335,8 +359,8 @@ if [[ -d "$INSTALL_DIR/lib" ]]; then
         -maxdepth 1 \
         -type f \
         -name '*.a' \
-        -printf '%f\n' \
-        | sort
+        -printf '%f\n' |
+        sort
 
 else
 
@@ -359,8 +383,8 @@ if [[ -d "$INSTALL_DIR/lib" ]]; then
             -maxdepth 1 \
             -type f \
             -name 'libboost_*.a' \
-            -printf '%f\n' \
-            | sort
+            -printf '%f\n' |
+            sort
     )"
 
     if [[ -n "$BOOST_LIBS" ]]; then
@@ -385,10 +409,10 @@ if [[ -d "$INSTALL_DIR/share" ]]; then
         -mindepth 1 \
         -maxdepth 1 \
         -type d \
-        -printf '%f\n' \
-        | grep '^boost-' \
-        | sort \
-        || true
+        -printf '%f\n' |
+        grep '^boost-' |
+        sort ||
+        true
 
 fi
 
@@ -406,4 +430,3 @@ printf 'Triplet : %s\n' "$TRIPLET"
 printf 'Prefixo : %s\n' "$INSTALL_DIR"
 printf '========================================\n'
 printf '\n'
-
